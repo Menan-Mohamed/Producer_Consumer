@@ -1,8 +1,19 @@
 import {useReactFlow} from "@xyflow/react";
 import {v4} from "uuid";
+import {useState} from "react";
 
-function AddNode(){
+function AddNode(props){
     const {setNodes} = useReactFlow()
+    const {setEdges} = useReactFlow()
+    const [sim,setSim]= useState(false)
+
+    function simulate(){
+        setEdges(
+            prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
+        )
+        setSim(prevSim=>!prevSim)
+    }
+
 
     function location(){
         return Math.random() *300
@@ -15,7 +26,6 @@ function AddNode(){
         },
         position:{ x: location(), y:location() },
         type: 'qNode',
-
     }
     const newMachine = {
         id: v4(),
@@ -40,6 +50,7 @@ function AddNode(){
         <>
             <button onClick={addQueue}>Queue</button>
             <button onClick={addMachine}>Machine</button>
+            <button onClick={simulate}>Simulate</button>
         </>
     )
 }

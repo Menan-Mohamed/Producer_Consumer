@@ -6,8 +6,11 @@ import QNode from "./QNode.jsx";
 import MNode from "./MNode.jsx";
 import {v4} from "uuid";
 import AddNode from "./AddNode.jsx";
+import AnimatedEdge from './AnimatedEdge';
 
 function App() {
+    const [sim,setSim] = useState(false);
+
     const initialNodes = [{
         id: '0',
         data:{
@@ -16,11 +19,11 @@ function App() {
         position:{x:100, y:100},
         type:'qNode',
         },
-
         {
             id: v4(),
             data:{
-                amount: "M"
+                amount: "M",
+
             },
             position:{x:0, y:0},
             type: 'addNode',
@@ -32,16 +35,21 @@ function App() {
         source: '1',
         target: '2',
         markerEnd: { type: 'arrow', color: '#f00' },
+        type: sim?'animated': 'bezier',
         animated: true,
     }]
     const [nodes,setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
     const onConnect = useCallback((connection) => {
-        const edge = {...connection, animated:true, id: `${v4()}`,markerEnd: { type: 'arrow', color: '#f00' }}
+        const edge = {...connection, animated:true, id: `${v4()}`,markerEnd: { type: 'arrow', color: '#f00' }, type: sim?'animated': 'bezier'}
         setEdges((prevState) => addEdge(edge, prevState))
 
     },[])
+
+    const edgeTypes = {
+        'animated': AnimatedEdge,
+    };
 
     const nodeTypes = {
         'qNode': QNode,
@@ -64,6 +72,7 @@ function App() {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
           >
 
               <Background/>
