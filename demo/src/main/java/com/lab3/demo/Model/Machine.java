@@ -49,8 +49,9 @@ public class Machine implements Observable, Runnable {
         return isReady;
     }
 
-    public void setReady(boolean isReady) {
+    public synchronized void setReady(boolean isReady) {
         this.isReady = isReady;
+        notifyAll();
     }
 
     public void setSuccessorQueue(ProductsQueue successorQueue) {
@@ -67,17 +68,23 @@ public class Machine implements Observable, Runnable {
     }
 
     public synchronized void takeNewProduct() {
-        Product tempProduct = null;
-
-        if (!((ProductsQueue) observer).getQueueProducts().isEmpty() && isReady){
-            tempProduct = ((ProductsQueue) observer).getproduct();
-            isReady = false;
+        while (currentProduct == null && observer != null) {
+            ProductsQueue observedQueue = (ProductsQueue) observer;
+            if (!((ProductsQueue) observer).getQueueProducts().isEmpty() && isReady){
+                currentProduct = observedQueue.getproduct();
+                isReady = false;
+                break;
+            }
+            try {
+                wait(); // Wait until a product is available
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
-        currentProduct = tempProduct;
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         while (true) {
 
             if (isReady) {
@@ -88,6 +95,7 @@ public class Machine implements Observable, Runnable {
                 successorQueue.addtoQueue(currentProduct);
                 currentProduct = null;
                 isReady = true;
+                notifyAll();
             }
         }
     }

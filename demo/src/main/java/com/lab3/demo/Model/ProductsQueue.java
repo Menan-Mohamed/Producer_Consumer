@@ -38,11 +38,20 @@ public class ProductsQueue implements Observer{
         observablesMachines.add(m);
     }
 
-    public void addtoQueue(Product product){
+    public synchronized  void addtoQueue(Product product){
         queueProducts.add(product);
+        notifyAll();
     }
 
-    public Product getproduct(){
+    public synchronized Product getproduct() {
+        while (queueProducts.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+        }
         return queueProducts.poll();
     }
 

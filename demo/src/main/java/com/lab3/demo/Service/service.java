@@ -4,17 +4,42 @@ import com.lab3.demo.Model.Machine;
 import com.lab3.demo.Model.Observable;
 import com.lab3.demo.Model.Product;
 import com.lab3.demo.Model.ProductsQueue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@Service
 public class service {
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    public service(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+    public void sendMessageToClients(String destination, String message) {
+        messagingTemplate.convertAndSend(destination, message);
+    }
+    private void notifyStatusUpdate(String message) {
+        messagingTemplate.convertAndSend("/topic/status", message);
+}
+
 
     ArrayList<Thread> threads = new ArrayList<>();;
     ArrayList<Machine> machines = new ArrayList<>(); ;
     ArrayList<ProductsQueue> queues  = new ArrayList<>(); ;
-    int numproducts ;
+    int numproducts = 5 ;
+
+    public ArrayList<ProductsQueue> getQueues() {
+        return queues;
+    }
+
+    public ArrayList<Machine> getMachines() {
+        return machines;
+    }
 
     public service(){
 
@@ -24,11 +49,21 @@ public class service {
         ProductsQueue q = new ProductsQueue();
         q.setId(id);
         queues.add(q);
+        if(id == 0){
+            for (int i = 0; i < 5; i++) {
+                Product p = new Product(i);
+                q.addtoQueue(p);
+
+            }
+
+
+        }
     }
 
     public void addMachineTosystem(int id) {
         Machine m = new Machine(id);
         machines.add(m);
+        System.out.println("Machine added ");
     }
 
     public void connectMachineToQueue(int fromid , int toid){
@@ -69,7 +104,9 @@ public class service {
     }
 
     public void simulate(){
-
+        int threadPoolSize = 4;
+        System.out.println("Creating thread pool with size: " + threadPoolSize);
+        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
         for (Machine machine: this.machines){
             Thread thread = new Thread(machine);
             threads.add(thread);
@@ -78,6 +115,12 @@ public class service {
         for (Thread thread: this.threads){
             thread.start();
         }
+        executorService.shutdown();
+        notifyStatusUpdate("Simulation started...");
+    }
+
+    public String getStatus() {
+        return "offf";
     }
 }
 class Test {
@@ -115,7 +158,7 @@ class Test {
         // Monitor the system state at intervals
         executorService.submit(() -> {
             int checkCount = 0;
-            while (checkCount < 20) { // Check 10 times before stopping
+            while (checkCount < 25) { // Check 10 times before stopping
                 try {
                     Thread.sleep(1000); // Wait for 1 second between checks
                 } catch (InterruptedException e) {
