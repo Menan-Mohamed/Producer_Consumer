@@ -12,6 +12,8 @@ function AddNode(props){
             prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
         )
         setSim(prevSim=>!prevSim)
+
+
     }
 
 
