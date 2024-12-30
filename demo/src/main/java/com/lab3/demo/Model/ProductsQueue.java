@@ -7,7 +7,7 @@ import java.util.Queue;
 public class ProductsQueue implements Observer{
     private int id ;
     private Queue<Product> queueProducts = new LinkedList<>();
-    private ArrayList<Observable> observablesMachines = new ArrayList<>();;
+    private ArrayList<Observable> observablesMachines = new ArrayList<>();
 
 
     public int getId() {
