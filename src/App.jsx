@@ -7,6 +7,7 @@ import MNode from "./MNode.jsx";
 import {v4} from "uuid";
 import AddNode from "./AddNode.jsx";
 import AnimatedEdge from './AnimatedEdge';
+import axios from "axios";
 
 function App() {
     const [sim,setSim] = useState(false);
@@ -19,14 +20,15 @@ function App() {
         position:{x:100, y:100},
         type:'qNode',
         },
-        {
-            id: v4(),
-            data:{
-                amount: "M",
-            },
-            position:{x:0, y:0},
-            type: 'addNode',
-        },
+        // {
+        //     id: v4(),
+        //     data:{
+        //         amount: "M",
+        //
+        //     },
+        //     position:{x:0, y:0},
+        //     type: 'addNode',
+        // },
     ]
     const initialEdges = []
     const [nodes,setNodes, onNodesChange] = useNodesState(initialNodes)
@@ -47,12 +49,96 @@ function App() {
     const nodeTypes = {
         'qNode': QNode,
         'mNode': MNode,
-        'addNode': AddNode
+
+    }
+
+
+    async function simulate(){
+        setEdges(
+            prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
+        )
+        setSim(prevSim=>!prevSim)
+        console.log(edges)
+        console.log(nodes)
+
+        try {
+            nodes.map((node) =>{
+                if(node.type === 'qNode'){
+                    axios.post(`http://localhost:8080/api/addQueue?id=${node.id}`)
+                }else if(node.type === 'mNode'){
+                    axios.post(`http://localhost:8080/api/addMachine?id=${node.id}`)
+                }
+                console.log(node)
+
+            })
+
+            edges.map((edge) =>{
+                const source = nodes.filter(node => node.id === edge.source)[0].type
+                const destination = nodes.filter(node => node.id === edge.target)[0].type
+                console.log("source")
+                console.log(source)
+                console.log("destination")
+                console.log(destination)
+                if(source ==="qNode" && destination === "mNode"){
+                    axios.post(`http://localhost:8080/api/connectQueueToMachine?fromId=${edge.source}&toId=${edge.target}`)
+
+
+                }
+                else if(source === "mNode" && destination === "qNode"){
+                    axios.post(`http://localhost:8080/api/connectMachineToQueue?fromId=${edge.source}&toId=${edge.target}`)
+
+                }
+                else {
+                    console.log("invalid connection")
+                }
+            })
+        }catch (e){
+            console.log(e)
+        }
+
+    }
+
+
+
+    function location(){
+        return Math.random() *300
+    }
+
+    const newQueue = {
+        id: v4(),
+        data:{
+            amount:"Q",
+        },
+        position:{ x: location(), y:location() },
+        type: 'qNode',
+    }
+    const newMachine = {
+        id: v4(),
+        data:{
+            amount:"M",
+        },
+        position:{ x: location(), y:location() },
+        type: 'mNode',
+
+    }
+
+    function addQueue(){
+
+        setNodes(prev => [...prev, newQueue])
+    }
+    function addMachine(){
+
+        setNodes(prev => [...prev, newMachine])
     }
 
 
   return (
     <>
+        <AddNode
+            simulate={simulate}
+            addMachine={addMachine}
+            addQueue={addQueue}
+        />
       <div style={{height:'1000px', width:'1500px'}}>
           <ReactFlow
               height={"500px"}
@@ -110,6 +196,7 @@ export default App
 //
 //             // Subscribe to the /topic/status topic
 //             stompClient.subscribe('/topic/status', (msg) => {
+//                 console.log(msg)
 //                 setStatus(msg.body);
 //             });
 //         });
@@ -148,5 +235,5 @@ export default App
 // };
 //
 // export default App;
-
+//
 
