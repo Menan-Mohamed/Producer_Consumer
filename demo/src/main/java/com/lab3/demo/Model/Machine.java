@@ -1,17 +1,21 @@
 package com.lab3.demo.Model;
 
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.stereotype.Controller;
+
 import java.util.Random;
 
 
+
 public class Machine implements Observable, Runnable {
-    private int id;
+    private String id;
     private int processingTime;
     private Observer observer;
     private boolean isReady;
     private Product currentProduct;
     private ProductsQueue successorQueue;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
@@ -20,7 +24,7 @@ public class Machine implements Observable, Runnable {
         return processingTime;
     }
 
-    public Machine(int id) {
+    public Machine(String id) {
         this.id = id;
         this.processingTime = new Random().nextInt(20001) + 5000;
         this.isReady = true;
@@ -83,9 +87,11 @@ public class Machine implements Observable, Runnable {
         }
     }
 
+
     @Override
     public synchronized void run() {
         while (true) {
+            System.out.println("here");
 
             if (isReady) {
                 notifyObservers();
