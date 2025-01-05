@@ -1,14 +1,21 @@
 package com.lab3.demo.Model;
 
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Component;
+
 import java.util.Random;
 
+@Component
 public class Product {
     private String color;
     private int id;
 
-    public Product(int id){
+    private final SimpMessageSendingOperations messagingTemplate;
+
+    public Product(SimpMessageSendingOperations messagingTemplate){
+        this.messagingTemplate = messagingTemplate;
         this.color = generateRandomHexColor();
-        this.id=id;
+        this.id= (int) (Math.random()*100);
     }
 
     private String generateRandomHexColor() {

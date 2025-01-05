@@ -1,13 +1,18 @@
 package com.lab3.demo.Model;
 
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
+@Component
 public class ProductsQueue implements Observer{
     private String id ;
     private Queue<Product> queueProducts = new LinkedList<>();
     private ArrayList<Observable> observablesMachines = new ArrayList<>();
+
 
 
     public String getId() {
@@ -52,6 +57,7 @@ public class ProductsQueue implements Observer{
                 return null;
             }
         }
+
         return queueProducts.poll();
     }
 

@@ -1,12 +1,12 @@
 package com.lab3.demo.Model;
 
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.stereotype.Component;
+import java.lang.String;
 
 import java.util.Random;
 
-
-
+@Component
 public class Machine implements Observable, Runnable {
     private String id;
     private int processingTime;
@@ -14,21 +14,25 @@ public class Machine implements Observable, Runnable {
     private boolean isReady;
     private Product currentProduct;
     private ProductsQueue successorQueue;
+    private String color;
+
+    private final SimpMessageSendingOperations messagingTemplate;
+
+    public Machine(String id, SimpMessageSendingOperations messagingTemplate) {
+        this.id = id;
+        this.processingTime = new Random().nextInt(20001) + 5000;
+        this.isReady = true;
+        this.currentProduct = new Product(messagingTemplate);
+        this.messagingTemplate = messagingTemplate;
+        this.color = currentProduct.getColor();
+    }
 
     public String getId() {
         return id;
     }
 
-
     public int getProcessingTime() {
         return processingTime;
-    }
-
-    public Machine(String id) {
-        this.id = id;
-        this.processingTime = new Random().nextInt(20001) + 5000;
-        this.isReady = true;
-
     }
 
     @Override
@@ -74,8 +78,9 @@ public class Machine implements Observable, Runnable {
     public synchronized void takeNewProduct() {
         while (currentProduct == null && observer != null) {
             ProductsQueue observedQueue = (ProductsQueue) observer;
-            if (!((ProductsQueue) observer).getQueueProducts().isEmpty() && isReady){
+            if (!observedQueue.getQueueProducts().isEmpty() && isReady) {
                 currentProduct = observedQueue.getproduct();
+                this.color = currentProduct.getColor();
                 isReady = false;
                 break;
             }
@@ -85,24 +90,41 @@ public class Machine implements Observable, Runnable {
                 Thread.currentThread().interrupt();
             }
         }
-    }
+        TempMachine tempMachine = new TempMachine();
+        tempMachine.color = this.color;
+        tempMachine.id = this.id;
+        messagingTemplate.convertAndSend("/topic/status", tempMachine);
 
+    }
 
     @Override
     public synchronized void run() {
         while (true) {
-            System.out.println("here");
+            System.out.println("Machine " + id + " is ready: " + isReady);
 
             if (isReady) {
                 notifyObservers();
             }
             if (currentProduct != null) {
                 processProduct(currentProduct);
-                successorQueue.addtoQueue(currentProduct);
-                currentProduct = null;
+                this.color = currentProduct.getColor();
+                if (successorQueue != null) {
+                    successorQueue.addtoQueue(currentProduct);
+                }
+
                 isReady = true;
                 notifyAll();
             }
+            TempMachine tempMachine = new TempMachine();
+            tempMachine.color = this.color;
+            tempMachine.id = this.id;
+            messagingTemplate.convertAndSend("/topic/status", tempMachine);
         }
     }
+}
+
+class TempMachine{
+    public String color;
+    public String id;
+
 }
