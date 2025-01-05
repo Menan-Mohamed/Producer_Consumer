@@ -4,7 +4,7 @@ import {Handle, useReactFlow} from "@xyflow/react";
 function QNode(props) {
 
     return (
-        <div className="q-node">
+        <div className="q-node" style={{backgroundColor: props.data.color}}>
             <div style={{color: "white"}}>
                 {props.data.amount}
             </div>

@@ -4,7 +4,7 @@ import {IoMdClose} from "react-icons/io";
 function MNode(props) {
 
     return (
-        <div className="m-node">
+        <div className="m-node" style={{backgroundColor: props.data.color}}>
             <div style={{color: "white"}}>
                 {props.data.amount}
             </div>
