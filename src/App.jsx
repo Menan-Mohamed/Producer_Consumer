@@ -132,6 +132,7 @@ function App() {
         console.log(edges)
         console.log(nodes)
 
+
     }
 
 
