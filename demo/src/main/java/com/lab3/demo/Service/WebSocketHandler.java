@@ -15,16 +15,18 @@ import java.util.Map;
 @Component
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private final service simulatorService;
+    private  service simulatorService;
 
     // Inject the service using constructor injection
     public WebSocketHandler() {
-        this.simulatorService = new service();
+
     }
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
         String incomingMessage = message.getPayload();
+        simulatorService = new service();
+        simulatorService.setWebSocketSession(session);
         System.out.println("Received message: " + incomingMessage);
 
         ObjectMapper objectMapper = new ObjectMapper();

@@ -113,6 +113,7 @@ public class Machine implements Observable, Runnable {
 
                 if (currentProduct != null && !isReady) {
                     System.out.println(id + " is working");
+                    webSocketService.sendJsonMessage(currentProduct.getColor());
                     processProduct(currentProduct);
                     successorQueue.addtoQueue(currentProduct);
                     currentProduct = null;

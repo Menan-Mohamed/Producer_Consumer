@@ -11,9 +11,12 @@ import java.io.IOException;
 @Service
 public class WebSocketService {
     private final ObjectMapper objectMapper;
-    @Setter
     private volatile WebSocketSession session;
     private final Object sendLock = new Object();
+
+    public void setSession(WebSocketSession session) {
+        this.session = session;
+    }
 
     public WebSocketService() {
         this.objectMapper = new ObjectMapper();

@@ -22,6 +22,13 @@ public class service {
         //messagingTemplate.convertAndSend("/topic/status", message);
     }
 
+    public void setWebSocketService(WebSocketService webSocketService) {
+        this.webSocketService = webSocketService;
+    }
+    public void setWebSocketSession(WebSocketSession session) {
+        this.webSocketService.setSession(session);
+    }
+
 
     ArrayList<Thread> threads = new ArrayList<>();
     ;
