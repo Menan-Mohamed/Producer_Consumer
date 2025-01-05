@@ -13,54 +13,88 @@ import SockJS from 'sockjs-client/dist/sockjs';
 
 
 function App() {
-    const [webSocket, setWebSocket] = useState(null); 
-
-    useEffect(() => {
-        const socket = new WebSocket('ws://localhost:8080/simulation'); 
-        socket.onopen = () => {
-          console.log('WebSocket connected');
-        };
-        socket.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log('Received data:', data);
-          } catch (error) {
-            console.error('Error parsing message:', error);
-          }
-        };
-        socket.onclose = () => {
-          console.log('WebSocket closed');
-        };
+    const [webSocket, setWebSocket] = useState(null);
+   
     
-        setWebSocket(socket);
-        return () => {
-          socket.close(); 
-        };
-      }, []);
-    const [sim,setSim] = useState(false);
-
     const initialNodes = [{
         id: '0',
         data:{
-            amount:"Q0"
+            amount:"Q0",
+            num:0
         },
         position:{x:100, y:100},
         type:'qNode',
         },
-        // {
-        //     id: v4(),
-        //     data:{
-        //         amount: "M",
-        //
-        //     },
-        //     position:{x:0, y:0},
-        //     type: 'addNode',
-        // },
-    ]
-    const initialEdges = []
-    const [nodes,setNodes, onNodesChange] = useNodesState(initialNodes)
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
+    ]
+ 
+    const initialEdges = []
+    const [nodes,setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+   
+
+    useEffect(() => {
+        const socket = new WebSocket('ws://localhost:8080/simulation'); 
+        socket.onopen = () => {
+            console.log('WebSocket connected');
+        };
+    
+        socket.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                console.log('Received data:', message);
+    
+                setNodes((prevNodes) =>
+                    prevNodes.map((node) => {
+                        if (node.id === message.prevID) {
+                            return {
+                                ...node,
+                                data: {
+                                    ...node.data,
+                                    num: message.prevsize, // Update `num` for `prevID`
+                                },
+                            };
+                        } else if (node.id === message.nextID) {
+                            return {
+                                ...node,
+                                data: {
+                                    ...node.data,
+                                    num: message.nextsize, // Update `num` for `nextID`
+                                },
+                            };
+                        }else if(node.id === message.machineid){
+                            return{
+                            ...node,
+                            data: {
+                                ...node.data,
+                                color: message.color, // Update the color property
+                            },
+                         };
+                      
+                        }
+                        return node;
+                    })
+                );
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
+    
+        socket.onclose = () => {
+            console.log('WebSocket closed');
+        };
+    
+        setWebSocket(socket);
+        return () => {
+            socket.close();
+        };
+    }, []);
+    
+    const [sim,setSim] = useState(false);
+
+ 
+    
+    
     const onConnect = useCallback((connection) => {
         const edge = {...connection, animated:true, id: `${v4()}`,markerEnd: { type: 'arrow', color: '#f00' }, type: sim?'animated': 'default'};
         setEdges((prevState) => addEdge(edge, prevState))
@@ -89,49 +123,14 @@ function App() {
             webSocket.send(JSON.stringify(simulationData));
             console.log('Sent simulation data:', simulationData);
           } else {
-            console.error('WebSocket is not open. Cannot send data.');
-          }
+            console.error('WebSocket is not open. Cannot sent data.');
+        }
         setEdges(
             prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
         )
         setSim(prevSim=>!prevSim)
         console.log(edges)
         console.log(nodes)
-
-        try {
-            nodes.map((node) =>{
-                if(node.type === 'qNode'){
-                    axios.post(`http://localhost:8080/api/addQueue?id=${node.id}`)
-                }else if(node.type === 'mNode'){
-                    axios.post(`http://localhost:8080/api/addMachine?id=${node.id}`)
-                }
-                console.log(node)
-
-            })
-
-            edges.map((edge) =>{
-                const source = nodes.filter(node => node.id === edge.source)[0].type
-                const destination = nodes.filter(node => node.id === edge.target)[0].type
-                console.log("source")
-                console.log(source)
-                console.log("destination")
-                console.log(destination)
-                if(source ==="qNode" && destination === "mNode"){
-                    axios.post(`http://localhost:8080/api/connectQueueToMachine?fromId=${edge.source}&toId=${edge.target}`)
-
-
-                }
-                else if(source === "mNode" && destination === "qNode"){
-                    axios.post(`http://localhost:8080/api/connectMachineToQueue?fromId=${edge.source}&toId=${edge.target}`)
-
-                }
-                else {
-                    console.log("invalid connection")
-                }
-            })
-        }catch (e){
-            console.log(e)
-        }
 
     }
 
