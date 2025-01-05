@@ -98,40 +98,40 @@ function App() {
         console.log(edges)
         console.log(nodes)
 
-        try {
-            nodes.map((node) =>{
-                if(node.type === 'qNode'){
-                    axios.post(`http://localhost:8080/api/addQueue?id=${node.id}`)
-                }else if(node.type === 'mNode'){
-                    axios.post(`http://localhost:8080/api/addMachine?id=${node.id}`)
-                }
-                console.log(node)
+        // try {
+        //     nodes.map((node) =>{
+        //         if(node.type === 'qNode'){
+        //             axios.post(`http://localhost:8080/api/addQueue?id=${node.id}`)
+        //         }else if(node.type === 'mNode'){
+        //             axios.post(`http://localhost:8080/api/addMachine?id=${node.id}`)
+        //         }
+        //         console.log(node)
 
-            })
+        //     })
 
-            edges.map((edge) =>{
-                const source = nodes.filter(node => node.id === edge.source)[0].type
-                const destination = nodes.filter(node => node.id === edge.target)[0].type
-                console.log("source")
-                console.log(source)
-                console.log("destination")
-                console.log(destination)
-                if(source ==="qNode" && destination === "mNode"){
-                    axios.post(`http://localhost:8080/api/connectQueueToMachine?fromId=${edge.source}&toId=${edge.target}`)
+        //     edges.map((edge) =>{
+        //         const source = nodes.filter(node => node.id === edge.source)[0].type
+        //         const destination = nodes.filter(node => node.id === edge.target)[0].type
+        //         console.log("source")
+        //         console.log(source)
+        //         console.log("destination")
+        //         console.log(destination)
+        //         if(source ==="qNode" && destination === "mNode"){
+        //             axios.post(`http://localhost:8080/api/connectQueueToMachine?fromId=${edge.source}&toId=${edge.target}`)
 
 
-                }
-                else if(source === "mNode" && destination === "qNode"){
-                    axios.post(`http://localhost:8080/api/connectMachineToQueue?fromId=${edge.source}&toId=${edge.target}`)
+        //         }
+        //         else if(source === "mNode" && destination === "qNode"){
+        //             axios.post(`http://localhost:8080/api/connectMachineToQueue?fromId=${edge.source}&toId=${edge.target}`)
 
-                }
-                else {
-                    console.log("invalid connection")
-                }
-            })
-        }catch (e){
-            console.log(e)
-        }
+        //         }
+        //         else {
+        //             console.log("invalid connection")
+        //         }
+        //     })
+        // }catch (e){
+        //     console.log(e)
+        // }
 
     }
 
