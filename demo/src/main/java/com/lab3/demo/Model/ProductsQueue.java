@@ -5,16 +5,16 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class ProductsQueue implements Observer{
-    private int id ;
+    private String id ;
     private Queue<Product> queueProducts = new LinkedList<>();
     private ArrayList<Observable> observablesMachines = new ArrayList<>();
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -1,17 +1,32 @@
 package com.lab3.demo.Model;
 
-import java.util.Random;
+import com.lab3.demo.Service.WebSocketService;
 
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
 
 public class Machine implements Observable, Runnable {
-    private int id;
+    private String id;
     private int processingTime;
+
+    public Observer getObserver() {
+        return observer;
+    }
+
     private Observer observer;
     private boolean isReady;
     private Product currentProduct;
     private ProductsQueue successorQueue;
+    private final WebSocketService webSocketService;
+    ExecutorService executorService;
 
-    public int getId() {
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
+
+
+
+    public String getId() {
         return id;
     }
 
@@ -20,9 +35,11 @@ public class Machine implements Observable, Runnable {
         return processingTime;
     }
 
-    public Machine(int id) {
+    public Machine(String id, WebSocketService webSocketService) {
         this.id = id;
-        this.processingTime = new Random().nextInt(20001) + 5000;
+        this.webSocketService = webSocketService;
+        //this.processingTime = new Random().nextInt(20001) + 5000;
+        this.processingTime = 2000;
         this.isReady = true;
 
     }
@@ -68,10 +85,13 @@ public class Machine implements Observable, Runnable {
     }
 
     public synchronized void takeNewProduct() {
+        System.out.println("taked a product");
         while (currentProduct == null && observer != null) {
             ProductsQueue observedQueue = (ProductsQueue) observer;
             if (!((ProductsQueue) observer).getQueueProducts().isEmpty() && isReady){
                 currentProduct = observedQueue.getproduct();
+                String color = currentProduct.getColor();
+                System.out.println(color+"  taked done");
                 isReady = false;
                 break;
             }
@@ -84,19 +104,32 @@ public class Machine implements Observable, Runnable {
     }
 
     @Override
-    public synchronized void run() {
-        while (true) {
+    public void run() {
+        while (!Thread.currentThread().isInterrupted()) {
+            synchronized (this) {
+                if (isReady && currentProduct == null) {
+                    takeNewProduct();
+                }
 
-            if (isReady) {
-                notifyObservers();
+                if (currentProduct != null && !isReady) {
+                    System.out.println(id + " is working");
+                    processProduct(currentProduct);
+                    successorQueue.addtoQueue(currentProduct);
+                    currentProduct = null;
+                    isReady = true;
+                    notifyObservers();
+                    notifyAll();
+                }
             }
-            if (currentProduct != null) {
-                processProduct(currentProduct);
-                successorQueue.addtoQueue(currentProduct);
-                currentProduct = null;
-                isReady = true;
-                notifyAll();
+
+            // Small sleep to prevent busy waiting
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
+
     }
 }
