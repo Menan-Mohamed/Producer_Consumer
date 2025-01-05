@@ -85,20 +85,24 @@ public class Machine implements Observable, Runnable {
     }
 
     public synchronized void takeNewProduct() {
-        System.out.println("taked a product");
-        while (currentProduct == null && observer != null) {
+        System.out.println("Machine " + id + " attempting to take a product.");
+        while (currentProduct == null) {
             ProductsQueue observedQueue = (ProductsQueue) observer;
-            if (!((ProductsQueue) observer).getQueueProducts().isEmpty() && isReady){
-                currentProduct = observedQueue.getproduct();
-                String color = currentProduct.getColor();
-                System.out.println(color+"  taked done");
-                isReady = false;
-                break;
-            }
-            try {
-                wait(); // Wait until a product is available
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            synchronized (observedQueue) {
+                if (!observedQueue.getQueueProducts().isEmpty() && isReady) {
+                    currentProduct = observedQueue.getproduct();
+                    if (currentProduct != null) {
+                        System.out.println("Machine " + id + " took product: " + currentProduct.getColor());
+                        isReady = false;
+                        break;
+                    }
+                }
+                try {
+                    observedQueue.wait(); // Wait for the queue to notify
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
         }
     }
@@ -113,13 +117,14 @@ public class Machine implements Observable, Runnable {
 
                 if (currentProduct != null && !isReady) {
                     System.out.println(id + " is working");
-                    webSocketService.sendJsonMessage(currentProduct.getColor());
+                    RequestData data = new RequestData(currentProduct.getColor(), id);
+                    webSocketService.sendJsonMessage(data);
                     processProduct(currentProduct);
                     successorQueue.addtoQueue(currentProduct);
                     currentProduct = null;
                     isReady = true;
                     notifyObservers();
-                    notifyAll();
+                    //notifyAll();
                 }
             }
 

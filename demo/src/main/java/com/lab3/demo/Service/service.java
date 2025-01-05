@@ -31,11 +31,11 @@ public class service {
 
 
     ArrayList<Thread> threads = new ArrayList<>();
-    ;
+
     ArrayList<Machine> machines = new ArrayList<>();
 
     ArrayList<ProductsQueue> queues = new ArrayList<>();
-    ;
+
     int numproducts = 5;
 
     public ArrayList<ProductsQueue> getQueues() {

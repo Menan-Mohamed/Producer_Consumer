@@ -56,7 +56,8 @@ public class ProductsQueue implements Observer{
     }
 
     @Override
-    public void update(Observable observable) {
+    public synchronized  void update(Observable observable) {
         ( (Machine) observable).takeNewProduct();
+        notifyAll();
     }
 }
