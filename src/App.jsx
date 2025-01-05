@@ -7,8 +7,36 @@ import MNode from "./MNode.jsx";
 import {v4} from "uuid";
 import AddNode from "./AddNode.jsx";
 import AnimatedEdge from './AnimatedEdge';
+import axios from "axios";
+import { useEffect } from 'react';
+import SockJS from 'sockjs-client/dist/sockjs';
+
 
 function App() {
+    const [webSocket, setWebSocket] = useState(null); 
+
+    useEffect(() => {
+        const socket = new WebSocket('ws://localhost:8080/simulation'); 
+        socket.onopen = () => {
+          console.log('WebSocket connected');
+        };
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('Received data:', data);
+          } catch (error) {
+            console.error('Error parsing message:', error);
+          }
+        };
+        socket.onclose = () => {
+          console.log('WebSocket closed');
+        };
+    
+        setWebSocket(socket);
+        return () => {
+          socket.close(); 
+        };
+      }, []);
     const [sim,setSim] = useState(false);
 
     const initialNodes = [{
@@ -19,14 +47,15 @@ function App() {
         position:{x:100, y:100},
         type:'qNode',
         },
-        {
-            id: v4(),
-            data:{
-                amount: "M",
-            },
-            position:{x:0, y:0},
-            type: 'addNode',
-        },
+        // {
+        //     id: v4(),
+        //     data:{
+        //         amount: "M",
+        //
+        //     },
+        //     position:{x:0, y:0},
+        //     type: 'addNode',
+        // },
     ]
     const initialEdges = []
     const [nodes,setNodes, onNodesChange] = useNodesState(initialNodes)
@@ -47,12 +76,106 @@ function App() {
     const nodeTypes = {
         'qNode': QNode,
         'mNode': MNode,
-        'addNode': AddNode
+
+    }
+
+
+    async function simulate(){
+        if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+            const simulationData = {
+              nodes,
+              edges,
+            };
+            webSocket.send(JSON.stringify(simulationData));
+            console.log('Sent simulation data:', simulationData);
+          } else {
+            console.error('WebSocket is not open. Cannot send data.');
+          }
+        setEdges(
+            prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
+        )
+        setSim(prevSim=>!prevSim)
+        console.log(edges)
+        console.log(nodes)
+
+        try {
+            nodes.map((node) =>{
+                if(node.type === 'qNode'){
+                    axios.post(`http://localhost:8080/api/addQueue?id=${node.id}`)
+                }else if(node.type === 'mNode'){
+                    axios.post(`http://localhost:8080/api/addMachine?id=${node.id}`)
+                }
+                console.log(node)
+
+            })
+
+            edges.map((edge) =>{
+                const source = nodes.filter(node => node.id === edge.source)[0].type
+                const destination = nodes.filter(node => node.id === edge.target)[0].type
+                console.log("source")
+                console.log(source)
+                console.log("destination")
+                console.log(destination)
+                if(source ==="qNode" && destination === "mNode"){
+                    axios.post(`http://localhost:8080/api/connectQueueToMachine?fromId=${edge.source}&toId=${edge.target}`)
+
+
+                }
+                else if(source === "mNode" && destination === "qNode"){
+                    axios.post(`http://localhost:8080/api/connectMachineToQueue?fromId=${edge.source}&toId=${edge.target}`)
+
+                }
+                else {
+                    console.log("invalid connection")
+                }
+            })
+        }catch (e){
+            console.log(e)
+        }
+
+    }
+
+
+
+    function location(){
+        return Math.random() *10
+    }
+
+    const newQueue = {
+        id: v4(),
+        data:{
+            amount:"Q",
+        },
+        position:{ x: location(), y:location() },
+        type: 'qNode',
+    }
+    const newMachine = {
+        id: v4(),
+        data:{
+            amount:"M",
+        },
+        position:{ x: location(), y:location() },
+        type: 'mNode',
+
+    }
+
+    function addQueue(){
+
+        setNodes(prev => [...prev, newQueue])
+    }
+    function addMachine(){
+
+        setNodes(prev => [...prev, newMachine])
     }
 
 
   return (
     <>
+        <AddNode
+            simulate={simulate}
+            addMachine={addMachine}
+            addQueue={addQueue}
+        />
       <div style={{height:'1000px', width:'1500px'}}>
           <ReactFlow
               height={"500px"}
@@ -78,75 +201,4 @@ function App() {
 }
 
 export default App
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useEffect, useState } from 'react';
-// import SockJS from 'sockjs-client/dist/sockjs';
-// import { Stomp } from '@stomp/stompjs';
-//
-// const App = () => {
-//     const [status, setStatus] = useState('');
-//     const [message, setMessage] = useState('');
-//     const [response, setResponse] = useState('');
-//
-//     useEffect(() => {
-//         // Establish WebSocket connection
-//         const socket = new SockJS('http://localhost:8080/ws'); // Adjust the URL as needed
-//         const stompClient = Stomp.over(socket);
-//
-//         // Connect to the WebSocket
-//         stompClient.connect({}, (frame) => {
-//             console.log('Connected: ' + frame);
-//
-//             // Subscribe to the /topic/status topic
-//             stompClient.subscribe('/topic/status', (msg) => {
-//                 setStatus(msg.body);
-//             });
-//         });
-//
-//         // Clean up the connection when the component is unmounted
-//         return () => {
-//             if (stompClient) {
-//                 stompClient.disconnect();
-//             }
-//         };
-//     }, []);
-//
-//     const sendMessage = () => {
-//         const socket = new SockJS('http://localhost:8080/ws');
-//         const stompClient = Stomp.over(socket);
-//
-//         stompClient.connect({}, () => {
-//             stompClient.send('/app/status', {}, message);
-//         });
-//     };
-//
-//     return (
-//         <div>
-//             <h1>WebSocket Demo</h1>
-//             <input
-//                 type="text"
-//                 value={message}
-//                 onChange={(e) => setMessage(e.target.value)}
-//                 placeholder="Enter your message"
-//             />
-//             <button onClick={sendMessage}>Send Message</button>
-//             <p>Response: {response}</p>
-//             <p>Status: {status}</p>
-//         </div>
-//     );
-// };
-//
-// export default App;
-
 
