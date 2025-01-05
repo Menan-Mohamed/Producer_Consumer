@@ -38,8 +38,8 @@ public class Machine implements Observable, Runnable {
     public Machine(String id, WebSocketService webSocketService) {
         this.id = id;
         this.webSocketService = webSocketService;
-        //this.processingTime = new Random().nextInt(20001) + 5000;
-        this.processingTime = 2000;
+        this.processingTime = new Random().nextInt(10001) + 5000;
+//        this.processingTime = 2000;
         this.isReady = true;
 
     }
@@ -117,7 +117,7 @@ public class Machine implements Observable, Runnable {
 
                 if (currentProduct != null && !isReady) {
                     System.out.println(id + " is working");
-                    RequestData data = new RequestData(currentProduct.getColor(), id);
+                    RequestData data = new RequestData(currentProduct.getColor(), id, observer.getId(), observer.size(),successorQueue.getId(),successorQueue.size());
                     webSocketService.sendJsonMessage(data);
                     processProduct(currentProduct);
                     successorQueue.addtoQueue(currentProduct);

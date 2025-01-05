@@ -9,7 +9,9 @@ public class ProductsQueue implements Observer{
     private Queue<Product> queueProducts = new LinkedList<>();
     private ArrayList<Observable> observablesMachines = new ArrayList<>();
 
-
+    public int size(){
+        return queueProducts.size();
+    }
     public String getId() {
         return id;
     }

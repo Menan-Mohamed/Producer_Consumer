@@ -12,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,6 +37,7 @@ public class service {
 
     ArrayList<ProductsQueue> queues = new ArrayList<>();
 
+//    int numproducts = new Random().nextInt(10) + 5;
     int numproducts = 5;
 
     public ArrayList<ProductsQueue> getQueues() {
@@ -55,7 +57,7 @@ public class service {
         q.setId(id);
         queues.add(q);
         if (id.equals("0")) {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < numproducts; i++) {
                 Product p = new Product(i);
                 System.out.println("product added with color"+ p.getColor());
                 q.addtoQueue(p);
