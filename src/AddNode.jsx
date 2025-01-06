@@ -11,6 +11,7 @@ function AddNode(props){
             <button onClick={props.addQueue}>Queue</button>
             <button onClick={props.addMachine}>Machine</button>
             <button onClick={props.simulate}>Simulate</button>
+            <button onClick={props.resimulate}>Re Simulate</button>
         </>
     )
 }

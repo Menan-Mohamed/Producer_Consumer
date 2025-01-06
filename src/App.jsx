@@ -135,6 +135,19 @@ function App() {
 
     }
 
+    async function resimulate(){
+        if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+            webSocket.send("true");
+           // console.log('Sent simulation data:', simulationData);
+          } else {
+            console.error('WebSocket is not open. Cannot sent data.');
+        }
+        
+        setSim(prevSim=>!prevSim)
+        console.log(edges)
+        console.log(nodes)
+    }
+
 
 
     function location(){
@@ -173,6 +186,7 @@ function App() {
     <>
         <AddNode
             simulate={simulate}
+            resimulate={resimulate}
             addMachine={addMachine}
             addQueue={addQueue}
         />
