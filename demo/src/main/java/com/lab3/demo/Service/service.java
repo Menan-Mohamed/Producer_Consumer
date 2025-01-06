@@ -69,7 +69,6 @@ public class service {
 
     Thread thread = new Thread(() -> {
         int counter = 0;
-        int loop = memento.size();
         while (true) {
             if(!resimulateFlag) {
                 Product p = new Product(1);
@@ -84,13 +83,19 @@ public class service {
                 }
             }else{
                 System.out.println("entered re simulation !!!!!!!!");
+                int loop = memento.size();
                 System.out.println(loop + "the loop is hereeeeee");
+
                 queues.get(0).addtoQueue(memento.getProductarr().get(counter));
                 counter ++;
                 try {
                     Thread.sleep(memento.getRate().get(counter-1));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
+                }
+
+                if (counter >= loop) {
+                    counter = 0; // Reset counter
                 }
 
             }

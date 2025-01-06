@@ -12,7 +12,7 @@ public class Memento {
         this.rate = new ArrayList<>();
     }
 
-    public void addToMemento (Product p){
+    public synchronized void addToMemento (Product p){
         productarr.add(p);
     }
 
@@ -24,10 +24,10 @@ public class Memento {
         return rate;
     }
 
-    public void addRate (int t){
+    public synchronized void addRate (int t){
         rate.add(t);
     }
-    public int size(){
+    public synchronized int size(){
         return productarr.size();
     }
 }
