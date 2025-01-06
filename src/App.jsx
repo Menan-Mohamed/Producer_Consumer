@@ -202,7 +202,7 @@ function App() {
           <ReactFlow
               height={"500px"}
               width={"500px"}
-              colorMode={"system"}
+              colorMode={"light"}
               nodes={nodes}
               fitView={true}
               edges={edges}
