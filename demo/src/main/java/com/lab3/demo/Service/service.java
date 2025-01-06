@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 @Service
 public class service {
     private WebSocketService webSocketService = new WebSocketService();
+
     private void notifyStatusUpdate(String message) {
         //messagingTemplate.convertAndSend("/topic/status", message);
     }
@@ -74,6 +75,8 @@ public class service {
                 Product p = new Product(1);
                 queues.get(0).addtoQueue(p);
                 memento.addToMemento(p);
+                RequestData data = new RequestData("","","0",queues.get(0).size(),"",0);
+                webSocketService.sendJsonMessage(data);
                 try {
                     int time = new Random().nextInt(3000) + 1000;
                     memento.addRate(time);
@@ -87,6 +90,8 @@ public class service {
                 System.out.println(loop + "the loop is hereeeeee");
 
                 queues.get(0).addtoQueue(memento.getProductarr().get(counter));
+                RequestData data = new RequestData("","","0",queues.get(0).size(),"",0);
+                webSocketService.sendJsonMessage(data);
                 counter ++;
                 try {
                     Thread.sleep(memento.getRate().get(counter-1));

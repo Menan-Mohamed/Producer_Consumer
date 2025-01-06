@@ -78,6 +78,7 @@ public class Machine implements Observable, Runnable {
     public void processProduct(Product product) {
         System.out.println("Machine " + id + " is processing: " + product);
         try {
+
             Thread.sleep(processingTime);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

@@ -30,9 +30,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
         System.out.println(incomingMessage);
         if (incomingMessage.equals("true")) {
             if (simulatorService != null) {
-                simulatorService.setResimulateFlag(true);
                 simulatorService.getExecutorService().shutdown();
-                simulatorService.getQueues().get(0).getQueueProducts().clear();
+                simulatorService.setResimulateFlag(true);
+                simulatorService.getQueues().forEach(queue -> queue.getQueueProducts().clear());
                 simulatorService.simulate();
                 session.sendMessage(new TextMessage("Resimulation toggled and started!"));
             } else {
@@ -41,12 +41,17 @@ public class WebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
+
         simulatorService = new service();
+
         simulatorService.setWebSocketSession(session);
+
+        simulatorService.getQueues().forEach(queue -> queue.getQueueProducts().clear());
         System.out.println("Received message: " + incomingMessage);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> messageMap = objectMapper.readValue(incomingMessage, Map.class);
+
         System.out.println("Parsed message map: " + messageMap);
         try {
             if (messageMap.containsKey("nodes")) {
