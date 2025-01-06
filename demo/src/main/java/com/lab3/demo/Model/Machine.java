@@ -15,15 +15,10 @@ public class Machine implements Observable, Runnable {
     private boolean isReady;
     private boolean resumilate = false;
     private Product currentProduct;
-    private ProductsQueue successorQueue;
     private final WebSocketService webSocketService;
     private ExecutorService executorService;
     private String prevID;
-    ExecutorService executorService;
 
-    public void setExecutorService(ExecutorService executorService) {
-        this.executorService = executorService;
-    }
 
 
     public boolean isResumilate() {
@@ -34,16 +29,7 @@ public class Machine implements Observable, Runnable {
         this.resumilate = resumilate;
     }
 
-    public String getId() {
-        return id;
-    }
 
-
-
-
-    public int getProcessingTime() {
-        return processingTime;
-    }
 
     public Product getCurrentProduct() {
         return currentProduct;
@@ -114,6 +100,7 @@ public class Machine implements Observable, Runnable {
                 for(int i = 0 ; i<processingTime ; i+=10) {
 
                     if(resumilate){
+
                         break;
                     }
                     Thread.sleep(10);
@@ -124,15 +111,16 @@ public class Machine implements Observable, Runnable {
                 for(int i = 0 ; i<processingTime ; i+=10) {
 
                     if(!resumilate){
+
                         break;
                     }
                     Thread.sleep(10);
                 }
 
             }
-            RequestData data = new RequestData("gray", id, observer.getId(), observer.size(),successorQueue.getId(),successorQueue.size());
-            webSocketService.sendJsonMessage(data);
-        } catch (InterruptedException e) {
+            RequestData data = new RequestData("gray", id, "", 0,successorQueue.getId(),successorQueue.size());
+            webSocketService.sendJsonMessage(data); }
+        catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
@@ -161,12 +149,6 @@ public class Machine implements Observable, Runnable {
                         prevID = queue.getId();
                         break;
                     }
-                }
-                try {
-                    observedQueue.wait(); // Wait for the queue to notify
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
                 }
             }
         }
