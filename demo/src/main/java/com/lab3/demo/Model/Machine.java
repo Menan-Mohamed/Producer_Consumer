@@ -15,6 +15,7 @@ public class Machine implements Observable, Runnable {
 
     private Observer observer;
     private boolean isReady;
+    private boolean resumilate = false;
     private Product currentProduct;
     private ProductsQueue successorQueue;
     private final WebSocketService webSocketService;
@@ -25,6 +26,13 @@ public class Machine implements Observable, Runnable {
     }
 
 
+    public boolean isResumilate() {
+        return resumilate;
+    }
+
+    public void setResumilate(boolean resumilate) {
+        this.resumilate = resumilate;
+    }
 
     public String getId() {
         return id;
@@ -35,11 +43,18 @@ public class Machine implements Observable, Runnable {
         return processingTime;
     }
 
+    public Product getCurrentProduct() {
+        return currentProduct;
+    }
+
+    public void setCurrentProduct(Product currentProduct) {
+        this.currentProduct = currentProduct;
+    }
+
     public Machine(String id, WebSocketService webSocketService) {
         this.id = id;
         this.webSocketService = webSocketService;
         this.processingTime = new Random().nextInt(10001) + 5000;
-//        this.processingTime = 2000;
         this.isReady = true;
 
     }
@@ -78,8 +93,28 @@ public class Machine implements Observable, Runnable {
     public void processProduct(Product product) {
         System.out.println("Machine " + id + " is processing: " + product);
         try {
+            if(!resumilate){
+                for(int i = 0 ; i<processingTime ; i+=10) {
 
-            Thread.sleep(processingTime);
+                    if(resumilate){
+                        break;
+                    }
+                    Thread.sleep(10);
+                }
+
+            }
+            else{
+                for(int i = 0 ; i<processingTime ; i+=10) {
+
+                    if(!resumilate){
+                        break;
+                    }
+                    Thread.sleep(10);
+                }
+
+            }
+            RequestData data = new RequestData("gray", id, observer.getId(), observer.size(),successorQueue.getId(),successorQueue.size());
+            webSocketService.sendJsonMessage(data);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

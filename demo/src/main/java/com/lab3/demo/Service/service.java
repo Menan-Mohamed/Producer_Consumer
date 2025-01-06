@@ -80,7 +80,27 @@ public class service {
                 try {
                     int time = new Random().nextInt(3000) + 1000;
                     memento.addRate(time);
-                    Thread.sleep(time);
+                    if(!resimulateFlag){
+                        for(int i = 0 ; i<time ; i+=10) {
+
+                            if(resimulateFlag){
+                                break;
+                            }
+                            Thread.sleep(10);
+                        }
+
+                    }
+                    else{
+                        for(int i = 0 ; i<time ; i+=10) {
+
+                            if(!resimulateFlag){
+                                break;
+                            }
+                            Thread.sleep(10);
+                        }
+
+
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -176,7 +196,7 @@ public class service {
 
                 thread.start();
                 for (Machine machine : this.machines) {
-                    System.out.println(machine.getId() +"dddd");
+
                     machine.setExecutorService(executorService);
                     executorService.submit(machine);
 

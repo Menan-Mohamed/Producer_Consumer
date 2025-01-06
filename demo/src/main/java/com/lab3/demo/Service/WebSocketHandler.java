@@ -33,6 +33,11 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 simulatorService.getExecutorService().shutdown();
                 simulatorService.setResimulateFlag(true);
                 simulatorService.getQueues().forEach(queue -> queue.getQueueProducts().clear());
+                for(var i=0;i< simulatorService.getMachines().size();i++) {
+                    simulatorService.getMachines().get(i).setResumilate(true);
+//                    simulatorService.getMachines().get(i).setCurrentProduct(null);
+//                    simulatorService.getMachines().get(i).setReady(false);
+                }
                 simulatorService.simulate();
                 session.sendMessage(new TextMessage("Resimulation toggled and started!"));
             } else {
