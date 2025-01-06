@@ -100,6 +100,7 @@ public class Machine implements Observable, Runnable {
                 for(int i = 0 ; i<processingTime ; i+=10) {
 
                     if(resumilate){
+                        currentProduct = null;
 
                         break;
                     }
