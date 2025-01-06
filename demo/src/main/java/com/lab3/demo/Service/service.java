@@ -1,10 +1,7 @@
 package com.lab3.demo.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lab3.demo.Model.Machine;
-import com.lab3.demo.Model.Observable;
-import com.lab3.demo.Model.Product;
-import com.lab3.demo.Model.ProductsQueue;
+import com.lab3.demo.Model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -31,14 +28,32 @@ public class service {
     }
 
 
-    ArrayList<Thread> threads = new ArrayList<>();
+    //ArrayList<Thread> threads = new ArrayList<>();
+
+    ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     ArrayList<Machine> machines = new ArrayList<>();
 
     ArrayList<ProductsQueue> queues = new ArrayList<>();
 
-//    int numproducts = new Random().nextInt(10) + 5;
+    Memento memento = new Memento();
+
+    Boolean resimulateFlag = false;
+
+    public Boolean getResimulateFlag() {
+        return resimulateFlag;
+    }
+
+    public void setResimulateFlag(Boolean resimulateFlag) {
+        this.resimulateFlag = resimulateFlag;
+    }
+
+    //    int numproducts = new Random().nextInt(10) + 5;
     int numproducts = 5;
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
 
     public ArrayList<ProductsQueue> getQueues() {
         return queues;
@@ -52,18 +67,49 @@ public class service {
 
     }
 
+    Thread thread = new Thread(() -> {
+        int counter = 0;
+        int loop = memento.size();
+        while (true) {
+            if(!resimulateFlag) {
+                Product p = new Product(1);
+                queues.get(0).addtoQueue(p);
+                memento.addToMemento(p);
+                try {
+                    int time = new Random().nextInt(3000) + 1000;
+                    memento.addRate(time);
+                    Thread.sleep(time);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }else{
+                System.out.println("entered re simulation !!!!!!!!");
+                System.out.println(loop + "the loop is hereeeeee");
+                queues.get(0).addtoQueue(memento.getProductarr().get(counter));
+                counter ++;
+                try {
+                    Thread.sleep(memento.getRate().get(counter-1));
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }
+    });
+
+
     public void addQueueTosystem(String id) {
         ProductsQueue q = new ProductsQueue();
         q.setId(id);
         queues.add(q);
-        if (id.equals("0")) {
-            for (int i = 0; i < numproducts; i++) {
-                Product p = new Product(i);
-                System.out.println("product added with color"+ p.getColor());
-                q.addtoQueue(p);
-            }
-
-        }
+//        if (id.equals("0")) {
+//            for (int i = 0; i < numproducts; i++) {
+//                Product p = new Product(i);
+//                System.out.println("product added with color"+ p.getColor());
+//                q.addtoQueue(p);
+//            }
+//
+//        }
     }
 
     public void addMachineTosystem(String id) {
@@ -111,32 +157,45 @@ public class service {
     }
 
     public void simulate() {
-//        for(ProductsQueue m: this.queues){
-//            System.out.println("succesoor for m"+m.getObservablesMachines().get(0));
-//           // System.out.println("abl m"+m.getObserver());
-//        }
-        int threadPoolSize = 10;
-        System.out.println("Creating thread pool with size: " + threadPoolSize);
-        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
-        for (Machine machine : this.machines) {
-            System.out.println(machine.getId() +"dddd");
-//            Thread thread = new Thread(machine);
-//            threads.add(thread);
-            machine.setExecutorService(executorService);
-            executorService.submit(machine);
+        if (executorService.isShutdown() || executorService.isTerminated()) {
+            // Reinitialize executor service if it's already shutdown
+            executorService = Executors.newSingleThreadExecutor();
         }
 
-//        for (Thread thread : this.threads) {
-//            thread.start();
-//            System.out.println("thread is starting");
-//        }
-        executorService.shutdown();
-        notifyStatusUpdate("Simulation started...");
+        executorService.submit(() -> {
+
+                thread.start();
+                for (Machine machine : this.machines) {
+                    System.out.println(machine.getId() +"dddd");
+                    machine.setExecutorService(executorService);
+                    executorService.submit(machine);
+
+                }
+
+            executorService.shutdown();
+            notifyStatusUpdate("Simulation started...");
+
+        });
     }
 
-    public String getStatus() {
-        return "offf";
-    }
+//    public void simulate() {
+//
+//
+//        thread.start();
+//        for (Machine machine : this.machines) {
+//            System.out.println(machine.getId() +"dddd");
+//            machine.setExecutorService(executorService);
+//            executorService.submit(machine);
+//
+//        }
+//
+//        executorService.shutdown();
+//        notifyStatusUpdate("Simulation started...");
+//    }
+
+//    public String getStatus() {
+//        return "offf";
+//    }
 
 }
 //class Test {

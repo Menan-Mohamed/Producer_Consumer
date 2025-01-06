@@ -2,6 +2,7 @@ package com.lab3.demo.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lab3.demo.Model.Machine;
+import com.lab3.demo.Model.Product;
 import com.lab3.demo.Model.ProductsQueue;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -9,6 +10,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,20 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
         String incomingMessage = message.getPayload();
+        System.out.println(incomingMessage);
+        if (incomingMessage.equals("true")) {
+            if (simulatorService != null) {
+                simulatorService.setResimulateFlag(true);
+                simulatorService.getExecutorService().shutdown();
+                simulatorService.getQueues().get(0).getQueueProducts().clear();
+                simulatorService.simulate();
+                session.sendMessage(new TextMessage("Resimulation toggled and started!"));
+            } else {
+                session.sendMessage(new TextMessage("Simulator service is not initialized!"));
+            }
+            return;
+        }
+
         simulatorService = new service();
         simulatorService.setWebSocketSession(session);
         System.out.println("Received message: " + incomingMessage);
