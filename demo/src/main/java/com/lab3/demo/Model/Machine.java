@@ -39,6 +39,8 @@ public class Machine implements Observable, Runnable {
     }
 
 
+
+
     public int getProcessingTime() {
         return processingTime;
     }
