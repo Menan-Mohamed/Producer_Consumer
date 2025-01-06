@@ -2,23 +2,23 @@ package com.lab3.demo.Model;
 
 import com.lab3.demo.Service.WebSocketService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 public class Machine implements Observable, Runnable {
-    private String id;
-    private int processingTime;
-
-    public Observer getObserver() {
-        return observer;
-    }
-
-    private Observer observer;
+    private final String id;
+    private final int processingTime;
+    private final List<ProductsQueue> prevQueues = new ArrayList<>();
+    private ProductsQueue successorQueue;
     private boolean isReady;
     private boolean resumilate = false;
     private Product currentProduct;
     private ProductsQueue successorQueue;
     private final WebSocketService webSocketService;
+    private ExecutorService executorService;
+    private String prevID;
     ExecutorService executorService;
 
     public void setExecutorService(ExecutorService executorService) {
@@ -57,29 +57,36 @@ public class Machine implements Observable, Runnable {
         this.id = id;
         this.webSocketService = webSocketService;
         this.processingTime = new Random().nextInt(10001) + 5000;
+//        this.processingTime = 2000;
         this.isReady = true;
-
     }
 
-    @Override
-    public void addObserver(Observer observer) {
-        this.observer = observer;
+    public String getId() {
+        return id;
     }
 
-    public void setObserver(Observer observer) {
-        this.observer = observer;
+    public void setObserver(ProductsQueue queue) {
+        addPrevQueue(queue);
     }
 
-    @Override
-    public void notifyObservers() {
-        observer.update(this);
+
+    public int getProcessingTime() {
+        return processingTime;
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
     }
 
     public ProductsQueue getSuccessorQueue() {
         return successorQueue;
     }
 
-    public boolean isReady() {
+    public void setSuccessorQueue(ProductsQueue successorQueue) {
+        this.successorQueue = successorQueue;
+    }
+
+    public synchronized boolean isReady() {
         return isReady;
     }
 
@@ -88,8 +95,16 @@ public class Machine implements Observable, Runnable {
         notifyAll();
     }
 
-    public void setSuccessorQueue(ProductsQueue successorQueue) {
-        this.successorQueue = successorQueue;
+    public void addPrevQueue(ProductsQueue queue) {
+        prevQueues.add(queue);
+    }
+
+    public void removePrevQueue(ProductsQueue queue) {
+        prevQueues.remove(queue);
+    }
+
+    public List<ProductsQueue> getPrevQueues() {
+        return prevQueues;
     }
 
     public void processProduct(Product product) {
@@ -124,14 +139,26 @@ public class Machine implements Observable, Runnable {
 
     public synchronized void takeNewProduct() {
         System.out.println("Machine " + id + " attempting to take a product.");
-        while (currentProduct == null) {
-            ProductsQueue observedQueue = (ProductsQueue) observer;
-            synchronized (observedQueue) {
-                if (!observedQueue.getQueueProducts().isEmpty() && isReady) {
-                    currentProduct = observedQueue.getproduct();
+
+        if (prevQueues.isEmpty()) {
+            System.out.println("No queues available for Machine " + id);
+            return;
+        }
+
+        Random random = new Random();
+        int randomIndex = random.nextInt(prevQueues.size());
+
+
+
+        for (int i = 0; i < prevQueues.size(); i++) {
+            ProductsQueue queue = prevQueues.get((randomIndex + i) % prevQueues.size());
+            synchronized (queue) {
+                if (!queue.getQueueProducts().isEmpty() && isReady) {
+                    currentProduct = queue.getproduct();
                     if (currentProduct != null) {
-                        System.out.println("Machine " + id + " took product: " + currentProduct.getColor());
+                        System.out.println("Machine " + id + " took product: " + currentProduct.getColor() + " from queue " + queue.getId());
                         isReady = false;
+                        prevID = queue.getId();
                         break;
                     }
                 }
@@ -155,12 +182,12 @@ public class Machine implements Observable, Runnable {
 
                 if (currentProduct != null && !isReady) {
                     System.out.println(id + " is working");
-                    RequestData data = new RequestData(currentProduct.getColor(), id, observer.getId(), observer.size(),successorQueue.getId(),successorQueue.size());
+                    RequestData data = new RequestData(currentProduct.getColor(), id, null,0 ,successorQueue.getId(),successorQueue.size());
                     webSocketService.sendJsonMessage(data);
                     processProduct(currentProduct);
                     successorQueue.addtoQueue(currentProduct);
                     currentProduct = null;
-                    isReady = true;
+                    setReady(true);
                     notifyObservers();
                     //notifyAll();
                 }
@@ -174,6 +201,19 @@ public class Machine implements Observable, Runnable {
                 break;
             }
         }
+    }
 
+    @Override
+    public synchronized void addObserver(Observer observer) {
+        if (observer instanceof ProductsQueue) {
+            addPrevQueue((ProductsQueue) observer);
+        }
+    }
+
+    @Override
+    public synchronized void notifyObservers() {
+        for (ProductsQueue queue : prevQueues) {
+            queue.update(this);
+        }
     }
 }
