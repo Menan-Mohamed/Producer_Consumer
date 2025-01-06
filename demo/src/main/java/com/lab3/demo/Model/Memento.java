@@ -13,7 +13,9 @@ public class Memento {
     }
 
     public synchronized void addToMemento (Product p){
-        productarr.add(p);
+        Product x = new Product(1);
+        x.setColor(p.getColor());
+        productarr.add(x);
     }
 
     public ArrayList<Product> getProductarr() {

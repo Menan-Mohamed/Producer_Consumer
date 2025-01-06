@@ -39,7 +39,7 @@ public class Machine implements Observable, Runnable {
         this.id = id;
         this.webSocketService = webSocketService;
         this.processingTime = new Random().nextInt(10001) + 5000;
-//        this.processingTime = 2000;
+//
         this.isReady = true;
 
     }
@@ -137,5 +137,13 @@ public class Machine implements Observable, Runnable {
             }
         }
 
+    }
+
+    public Product getCurrentProduct() {
+        return currentProduct;
+    }
+
+    public void setCurrentProduct(Product currentProduct) {
+        this.currentProduct = currentProduct;
     }
 }
