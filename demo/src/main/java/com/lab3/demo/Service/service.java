@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 @Service
 public class service {
     private WebSocketService webSocketService = new WebSocketService();
+
     private void notifyStatusUpdate(String message) {
         //messagingTemplate.convertAndSend("/topic/status", message);
     }
@@ -74,10 +75,32 @@ public class service {
                 Product p = new Product(1);
                 queues.get(0).addtoQueue(p);
                 memento.addToMemento(p);
+                RequestData data = new RequestData("","","0",queues.get(0).size(),"",0);
+                webSocketService.sendJsonMessage(data);
                 try {
                     int time = new Random().nextInt(3000) + 1000;
                     memento.addRate(time);
-                    Thread.sleep(time);
+                    if(!resimulateFlag){
+                        for(int i = 0 ; i<time ; i+=10) {
+
+                            if(resimulateFlag){
+                                break;
+                            }
+                            Thread.sleep(10);
+                        }
+
+                    }
+                    else{
+                        for(int i = 0 ; i<time ; i+=10) {
+
+                            if(!resimulateFlag){
+                                break;
+                            }
+                            Thread.sleep(10);
+                        }
+
+
+                    }
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -87,6 +110,8 @@ public class service {
                 System.out.println(loop + "the loop is hereeeeee");
 
                 queues.get(0).addtoQueue(memento.getProductarr().get(counter));
+                RequestData data = new RequestData("","","0",queues.get(0).size(),"",0);
+                webSocketService.sendJsonMessage(data);
                 counter ++;
                 try {
                     Thread.sleep(memento.getRate().get(counter-1));
@@ -171,7 +196,7 @@ public class service {
 
                 thread.start();
                 for (Machine machine : this.machines) {
-                    System.out.println(machine.getId() +"dddd");
+
                     machine.setExecutorService(executorService);
                     executorService.submit(machine);
 

@@ -11,7 +11,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,21 +29,15 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String incomingMessage = message.getPayload();
         System.out.println(incomingMessage);
         if (incomingMessage.equals("true")) {
-            System.out.println("ReSimulating");
             if (simulatorService != null) {
-
                 simulatorService.getExecutorService().shutdown();
                 simulatorService.setResimulateFlag(true);
-                simulatorService.getQueues().get(0).getQueueProducts().clear();
-
-                for(var i=0;i< simulatorService.getQueues().size();i++) {
-                    simulatorService.getQueues().get(i).getQueueProducts().clear();
-                }
+                simulatorService.getQueues().forEach(queue -> queue.getQueueProducts().clear());
                 for(var i=0;i< simulatorService.getMachines().size();i++) {
-                    simulatorService.getMachines().get(i).setCurrentProduct(null);
-                    simulatorService.getMachines().get(i).setReady(false);
+                    simulatorService.getMachines().get(i).setResumilate(true);
+//                    simulatorService.getMachines().get(i).setCurrentProduct(null);
+//                    simulatorService.getMachines().get(i).setReady(false);
                 }
-
                 simulatorService.simulate();
                 session.sendMessage(new TextMessage("Resimulation toggled and started!"));
             } else {
@@ -52,14 +45,18 @@ public class WebSocketHandler extends TextWebSocketHandler {
             }
             return;
         }
-        System.out.println("Simulating");
+
 
         simulatorService = new service();
+
         simulatorService.setWebSocketSession(session);
+
+        simulatorService.getQueues().forEach(queue -> queue.getQueueProducts().clear());
         System.out.println("Received message: " + incomingMessage);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> messageMap = objectMapper.readValue(incomingMessage, Map.class);
+
         System.out.println("Parsed message map: " + messageMap);
         try {
             if (messageMap.containsKey("nodes")) {
