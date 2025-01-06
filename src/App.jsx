@@ -89,14 +89,13 @@ function App() {
             socket.close();
         };
     }, []);
-    
-    const [sim,setSim] = useState(false);
+
 
  
     
     
     const onConnect = useCallback((connection) => {
-        const edge = {...connection, animated:true, id: `${v4()}`,markerEnd: { type: 'arrow', color: '#f00' }, type: sim?'animated': 'default'};
+        const edge = {...connection, animated:true, id: `${v4()}`,markerEnd: { type: 'arrow', color: '#f00' }};
         setEdges((prevState) => addEdge(edge, prevState))
         console.log(nodes)
         console.log(edges)
@@ -126,9 +125,8 @@ function App() {
             console.error('WebSocket is not open. Cannot sent data.');
         }
         setEdges(
-            prevEdges => prevEdges.map(prevEdge => ({...prevEdge,type:sim?'bezier': 'animated'}))
+            prevEdges => prevEdges.map(prevEdge => ({...prevEdge}))
         )
-        setSim(prevSim=>!prevSim)
         console.log(edges)
         console.log(nodes)
 
@@ -136,14 +134,24 @@ function App() {
     }
 
     async function resimulate(){
+        const n = nodes.map((node) => {
+            if(node.type ==="mNode"){
+                return {...node,data:{...node.data, color: "gray"} }
+            }else if (node.type == "qNode"){
+                return {...node,data:{...node.data, num: 0} }
+
+
+            }
+            return node;
+        })
+        setNodes(n);
         if (webSocket && webSocket.readyState === WebSocket.OPEN) {
             webSocket.send("true");
            // console.log('Sent simulation data:', simulationData);
           } else {
             console.error('WebSocket is not open. Cannot sent data.');
         }
-        
-        setSim(prevSim=>!prevSim)
+
         console.log(edges)
         console.log(nodes)
     }
