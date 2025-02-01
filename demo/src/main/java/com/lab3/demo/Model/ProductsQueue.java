@@ -5,16 +5,18 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class ProductsQueue implements Observer{
-    private int id ;
+    private String id ;
     private Queue<Product> queueProducts = new LinkedList<>();
-    private ArrayList<Observable> observablesMachines = new ArrayList<>();;
+    private ArrayList<Observable> observablesMachines = new ArrayList<>();
 
-
-    public int getId() {
+    public int size(){
+        return queueProducts.size();
+    }
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -38,16 +40,26 @@ public class ProductsQueue implements Observer{
         observablesMachines.add(m);
     }
 
-    public void addtoQueue(Product product){
+    public synchronized  void addtoQueue(Product product){
         queueProducts.add(product);
+        notifyAll();
     }
 
-    public Product getproduct(){
+    public synchronized Product getproduct() {
+        while (queueProducts.isEmpty()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+        }
         return queueProducts.poll();
     }
 
     @Override
-    public void update(Observable observable) {
+    public synchronized  void update(Observable observable) {
         ( (Machine) observable).takeNewProduct();
+        notifyAll();
     }
 }

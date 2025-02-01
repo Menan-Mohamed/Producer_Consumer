@@ -11,7 +11,6 @@ public class Product {
         this.id=id;
     }
 
-
     private String generateRandomHexColor() {
         Random random = new Random();
 
@@ -28,7 +27,6 @@ public class Product {
         return hexColor;
     }
 
-
     private static int clamp(int value) {
         return Math.max(0, Math.min(255, value));
     }
@@ -36,7 +34,8 @@ public class Product {
     public String getColor() {
         return color;
     }
-
-
+    public void setColor(String color) {
+        this.color = color;
+    }
 
 }
